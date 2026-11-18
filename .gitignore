@@ -3,3 +3,5 @@ engine/
 # Paquete generado
 dist/
 *.zip
+# Diseños privados (no se publican)
+Logo/
