@@ -3,12 +3,16 @@ name: Compilar AirMe (Windows)
 on:
   push:
     branches: [main]
+    tags: ['v*']   # una etiqueta vX.Y.Z publica la versión en GitHub Releases
   pull_request:
   workflow_dispatch:
 
 env:
   # Commit fijo de UxPlay (>= 1.74: trae su propio mDNS, no necesita Bonjour SDK)
   UXPLAY_REF: 48f5ce47c9ef694afccfac907c9e8828329657fe
+
+permissions:
+  contents: write   # para crear la Release al subir una etiqueta
 
 jobs:
   build:
@@ -62,8 +66,54 @@ jobs:
         shell: pwsh
         run: ./scripts/smoke-test.ps1 -Dist dist/AirMe
 
+      - name: Versión (desde AirMe.csproj)
+        id: version
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content app/AirMe/AirMe.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$v") {
+            throw "La etiqueta ${{ github.ref_name }} no coincide con la versión v$v de AirMe.csproj"
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "AirMe $v"
+
+      - name: Crear instalador (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (-not $iscc) {
+            choco install innosetup -y --no-progress | Out-Null
+            $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe" | Select-Object -First 1
+          }
+          $exe = if ($iscc.Source) { $iscc.Source } else { $iscc.FullName }
+          & $exe "/DAppVersion=${{ steps.version.outputs.version }}" "/DSourceDir=$PWD\dist\AirMe" "/DOutputDir=$PWD\dist" installer/AirMe.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC falló ($LASTEXITCODE)" }
+          Compress-Archive -Path dist/AirMe -DestinationPath "dist/AirMe-${{ steps.version.outputs.version }}-portable.zip"
+          Get-ChildItem dist -File | Format-Table Name, Length
+
       - uses: actions/upload-artifact@v5
         with:
           name: AirMe-windows-x64
           path: dist/AirMe
           retention-days: 30
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: AirMe-Setup
+          path: dist/AirMe-Setup-*.exe
+          retention-days: 30
+          compression-level: 0
+
+      - name: Publicar en GitHub Releases
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          "dist/AirMe-Setup-${{ steps.version.outputs.version }}.exe"
+          "dist/AirMe-${{ steps.version.outputs.version }}-portable.zip"
+          --title "AirMe ${{ steps.version.outputs.version }}" --generate-notes
