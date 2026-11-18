@@ -13,6 +13,8 @@ public partial class App : Application
     private Forms.NotifyIcon? _tray;
     private MainWindow? _main;
     private bool _toldStillRunning;
+    private EngineState _lastState = EngineState.Stopped;
+    private bool _minimizedForStream;
 
     public AppSettings Settings { get; private set; } = new();
     public EngineHost Engine { get; private set; } = null!;
@@ -75,6 +77,14 @@ public partial class App : Application
 
     private void OnEngineChanged()
     {
+        var current = Engine.State;
+        if (current != _lastState)
+        {
+            if (current == EngineState.Streaming) OnStreamStarted();
+            else if (_lastState == EngineState.Streaming) OnStreamEnded();
+            _lastState = current;
+        }
+
         _main?.UpdateEngineUi();
         if (_tray != null)
         {
@@ -88,6 +98,27 @@ public partial class App : Application
             string text = $"{Settings.ReceiverName} — {state}";
             _tray.Text = text.Length > 63 ? text[..63] : text;
         }
+    }
+
+    /// <summary>Al conectar el iPhone: el video pasa al frente y la ventana de AirMe se minimiza.</summary>
+    private void OnStreamStarted()
+    {
+        Native.BringToFront(Engine.VideoWindow);
+        if (_main is { IsVisible: true } && _main.WindowState != WindowState.Minimized)
+        {
+            _main.WindowState = WindowState.Minimized;
+            _minimizedForStream = true;
+        }
+    }
+
+    /// <summary>Al desconectar: si AirMe se minimizó por la transmisión, vuelve a mostrarse.</summary>
+    private void OnStreamEnded()
+    {
+        if (_minimizedForStream && _main is { IsVisible: true } && _main.WindowState == WindowState.Minimized)
+        {
+            _main.WindowState = WindowState.Normal;
+        }
+        _minimizedForStream = false;
     }
 
     public void ShowMainWindow(bool settings = false)

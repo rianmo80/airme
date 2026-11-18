@@ -30,6 +30,8 @@ public sealed partial class EngineHost : IDisposable
 
     public EngineState State { get; private set; } = EngineState.Stopped;
     public string? DeviceName { get; private set; }
+    /// <summary>Ventana del video mientras se transmite (IntPtr.Zero si no).</summary>
+    public IntPtr VideoWindow { get; private set; }
     public string? EnginePath { get; }
     public event Action? Changed;
 
@@ -240,8 +242,8 @@ public sealed partial class EngineHost : IDisposable
                 return;
             }
 
-            bool streaming = Native.HasVideoWindow(p.Id);
-            SetState(streaming ? EngineState.Streaming : EngineState.Waiting);
+            VideoWindow = Native.FindVideoWindow(p.Id);
+            SetState(VideoWindow != IntPtr.Zero ? EngineState.Streaming : EngineState.Waiting);
         }
     }
 

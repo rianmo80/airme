@@ -20,10 +20,10 @@ internal static partial class Native
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr hwnd, StringBuilder className, int maxCount);
 
-    /// <summary>¿El proceso tiene abierta la ventana de video de GStreamer (Direct3D)?</summary>
-    public static bool HasVideoWindow(int processId)
+    /// <summary>Ventana de video de GStreamer (Direct3D) abierta por el proceso, o IntPtr.Zero.</summary>
+    public static IntPtr FindVideoWindow(int processId)
     {
-        bool found = false;
+        IntPtr found = IntPtr.Zero;
         var cls = new StringBuilder(64);
         EnumWindows((hwnd, _) =>
         {
@@ -32,12 +32,40 @@ internal static partial class Native
             cls.Clear();
             if (GetClassName(hwnd, cls, cls.Capacity) > 0 && cls.ToString().StartsWith("GSTD3D1", StringComparison.Ordinal))
             {
-                found = true;
+                found = hwnd;
                 return false;
             }
             return true;
         }, IntPtr.Zero);
         return found;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindowAsync(IntPtr hwnd, int cmd);
+
+    private static readonly IntPtr HWND_TOPMOST = new(-1);
+    private static readonly IntPtr HWND_NOTOPMOST = new(-2);
+    private const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_SHOWWINDOW = 0x0040;
+    private const int SW_RESTORE = 9;
+
+    /// <summary>Pone la ventana delante de las demás y le da el foco (si Windows lo permite).</summary>
+    public static void BringToFront(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+        if (IsIconic(hwnd)) ShowWindowAsync(hwnd, SW_RESTORE);
+        // Subirla al frente aunque Windows no deje darle el foco (truco topmost → normal)
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        SetForegroundWindow(hwnd);
     }
 
     // ---- Job object: si AirMe se cierra (aunque sea de golpe), el motor también ----
