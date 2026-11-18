@@ -1,14 +1,18 @@
 ﻿# Verifica que el paquete AirMe arranca en Windows "limpio" (sin MSYS2 en el PATH)
-# y que GStreamer encuentra los elementos que usa UxPlay.
+# y que GStreamer encuentra los elementos que usa UxPlay. También comprueba AirMe.exe.
 param([string]$Dist = "dist/AirMe")
 $ErrorActionPreference = "Stop"
 
 $Dist = (Resolve-Path $Dist).Path
+$App = Join-Path $Dist "AirMe.exe"
+if (-not (Test-Path $App)) { throw "Falta AirMe.exe en $Dist" }
+Write-Host ("AirMe.exe: {0:N0} MB" -f ((Get-Item $App).Length / 1MB))
+$Dist = Join-Path $Dist "engine"
 $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
 $env:GST_PLUGIN_PATH = "$Dist\lib\gstreamer-1.0"
 $env:GST_PLUGIN_SYSTEM_PATH = "$Dist\lib\gstreamer-1.0"
 $env:GST_PLUGIN_SCANNER = "$Dist\bin\gst-plugin-scanner.exe"
-$env:GST_REGISTRY = "$env:RUNNER_TEMP\airme-registry.bin"
+$env:GST_REGISTRY = "$env:TEMP\airme-registry.bin"
 
 $version = & "$Dist\bin\uxplay.exe" -v 2>&1 | Out-String
 Write-Host $version

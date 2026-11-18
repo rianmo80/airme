@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AirMe</RootNamespace>
+    <AssemblyName>AirMe</AssemblyName>
+    <ApplicationIcon>Assets\airme.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>0.2.0</Version>
+    <Product>AirMe</Product>
+    <Description>Duplica la pantalla de tu iPhone en Windows por WiFi</Description>
+    <Copyright>AirMe · motor UxPlay (GPL-3.0)</Copyright>
+    <!-- WinForms solo se usa para el icono de la bandeja; el DPI (por monitor) lo declara app.manifest para WPF -->
+    <NoWarn>$(NoWarn);WFO1000;WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Evitar ambigüedades con WinForms: solo se importa explícitamente donde se usa -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\airme.ico" />
+  </ItemGroup>
+
+</Project>

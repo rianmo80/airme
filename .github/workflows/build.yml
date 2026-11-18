@@ -44,8 +44,19 @@ jobs:
           cmake -S engine -B engine/build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build engine/build
 
-      - name: Empaquetar
+      - name: Empaquetar motor
         run: bash scripts/package.sh
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publicar la app AirMe.exe
+        shell: pwsh
+        run: >-
+          dotnet publish app/AirMe/AirMe.csproj -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=none -o dist/AirMe
 
       - name: Prueba de arranque (fuera de MSYS2)
         shell: pwsh

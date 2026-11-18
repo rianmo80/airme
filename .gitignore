@@ -5,3 +5,6 @@ dist/
 *.zip
 # Diseños privados (no se publican)
 Logo/
+# Compilación local de la app
+app/**/bin/
+app/**/obj/
