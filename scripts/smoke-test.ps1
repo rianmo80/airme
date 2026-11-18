@@ -1,4 +1,4 @@
-# Verifica que el paquete AirMe arranca en Windows "limpio" (sin MSYS2 en el PATH)
+﻿# Verifica que el paquete AirMe arranca en Windows "limpio" (sin MSYS2 en el PATH)
 # y que GStreamer encuentra los elementos que usa UxPlay.
 param([string]$Dist = "dist/AirMe")
 $ErrorActionPreference = "Stop"

@@ -30,7 +30,16 @@ for d in "${deps[@]}"; do cp -n "$d" "$OUT/bin/"; done
 echo "DLLs copiadas: ${#deps[@]}"
 
 cp "$ROOT/packaging/AirMe.bat" "$OUT/"
-: > "$OUT/airme.rc"   # archivo de opciones vacío (reservado para AirMe)
+cat > "$OUT/airme.rc" <<'EOF'
+# Opciones de AirMe: una por linea, sin el guion inicial.
+# Quita el "#" del inicio de una linea para activarla.
+#
+# Arrancar en pantalla completa (Alt+Enter para salir):
+# fs
+#
+# Pedir un PIN en el iPhone la primera vez que se conecta:
+# pin
+EOF
 
 # Licencia y origen del motor (requisito GPL-3.0)
 cp "$ROOT/engine/LICENSE" "$OUT/licenses/UxPlay-LICENSE.txt"

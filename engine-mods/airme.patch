@@ -1,0 +1,55 @@
+diff --git a/renderers/CMakeLists.txt b/renderers/CMakeLists.txt
+index 01a4eed..cb5694b 100644
+--- a/renderers/CMakeLists.txt
++++ b/renderers/CMakeLists.txt
+@@ -49,7 +49,8 @@ add_library( renderers
+              STATIC
+              audio_renderer.c
+              video_renderer.c
+-             mux_renderer.c )
++             mux_renderer.c
++             airme_window.c )
+ 
+ target_link_libraries ( renderers PUBLIC airplay )
+ 
+diff --git a/renderers/video_renderer.c b/renderers/video_renderer.c
+index b6c1f1c..26aadf9 100644
+--- a/renderers/video_renderer.c
++++ b/renderers/video_renderer.c
+@@ -24,6 +24,7 @@
+ #include <gst/app/gstappsrc.h>
+ #include "video_renderer.h"
+ #include <gst/video/videooverlay.h>
++#include "airme_window.h"  /* AirMe */
+ 
+ static uintptr_t external_window_handle = 0;
+ 
+@@ -293,6 +294,7 @@ void video_renderer_init(logger_t *render_logger, const char *server_name, video
+ 
+     const gchar *appname = g_get_application_name();
+     if (!appname || strcmp(appname,server_name))  g_set_application_name(server_name);
++    airme_window_init(server_name);  /* AirMe: titulo de la ventana */
+     appname = NULL;
+     n_renderers = 1;
+     /* the renderer for hls video will only be built if a HLS uri is provided in 
+@@ -480,6 +482,7 @@ void video_renderer_init(logger_t *render_logger, const char *server_name, video
+ #endif
+         renderer_type[i]->bus = gst_element_get_bus(renderer_type[i]->pipeline);
+         gst_bus_set_sync_handler(renderer_type[i]->bus, window_handle_bus_sync_handler, NULL, NULL);
++        airme_window_watch_pipeline(renderer_type[i]->pipeline);  /* AirMe: la ventana se adapta al video */
+         gst_element_set_state (renderer_type[i]->pipeline, GST_STATE_READY);
+         GstState state;
+         GstStateChangeReturn ret = gst_element_get_state (renderer_type[i]->pipeline, &state, NULL, 100 * GST_MSECOND);
+diff --git a/uxplay.cpp b/uxplay.cpp
+index 5ad4e39..e090a14 100644
+--- a/uxplay.cpp
++++ b/uxplay.cpp
+@@ -3582,7 +3582,7 @@ int main (int argc, char *argv[]) {
+ 
+     if (videosink == "d3d11videosink"  && videosink_options.empty() && use_video) {
+         if (fullscreen) {
+-            videosink_options.append(" fullscreen-toggle-mode=GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY fullscreen=TRUE ");
++            videosink_options.append(" fullscreen-toggle-mode=GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY+GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER fullscreen=TRUE ");
+         } else {
+             videosink_options.append(" fullscreen-toggle-mode=GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER ");
+             LOGI("Use Alt-Enter key combination to toggle into/out of full-screen mode");

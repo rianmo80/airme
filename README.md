@@ -20,7 +20,11 @@ todo viene empaquetado en la carpeta `AirMe`.
 4. Si Windows pregunta por el Firewall, permite el acceso en **redes privadas**.
 5. En el iPhone (misma red WiFi): Centro de Control → Duplicar pantalla → **AirMe**.
 
-Atajos: `Alt+Enter` alterna pantalla completa.
+La ventana cambia de forma sola: vertical al duplicar la pantalla y horizontal al ver fotos o videos.
+`Alt+Enter` alterna pantalla completa.
+
+Opciones: edita `airme.rc` (quita el `#` de la línea), por ejemplo `fs` para arrancar en pantalla
+completa o `pin` para pedir un PIN al conectar un iPhone nuevo.
 
 ### Si el iPhone no ve "AirMe"
 
@@ -35,6 +39,7 @@ Atajos: `Alt+Enter` alterna pantalla completa.
 scripts/package.sh            Empaqueta uxplay.exe + DLLs + plugins de GStreamer
 scripts/smoke-test.ps1        Verifica que el paquete arranca fuera de MSYS2
 packaging/AirMe.bat           Lanzador del prototipo
+engine-mods/                  Mejoras de AirMe aplicadas sobre UxPlay al compilar
 ```
 
 La versión de UxPlay está fijada a un commit concreto en `build.yml` (`UXPLAY_REF`) para que
@@ -43,6 +48,7 @@ cada compilación sea reproducible.
 ## Hoja de ruta
 
 - [x] Fase 1 — Prototipo: UxPlay empaquetado como "AirMe", compilado en la nube.
+- [x] Paso 1 — Ventana "AirMe" que se adapta sola a fotos y videos (`engine-mods/`).
 - [ ] Fase 2 — Interfaz propia (.NET): ventana AirMe, pantalla completa, PIN, icono en bandeja.
 - [ ] Fase 3 — Grabación y capturas de pantalla, instalador.
 

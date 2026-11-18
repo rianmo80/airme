@@ -2,3 +2,6 @@
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 *.sh  text eol=lf
+*.patch -text
+engine-mods/*.c text eol=lf
+engine-mods/*.h text eol=lf

@@ -17,7 +17,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -34,6 +34,11 @@ jobs:
           git clone https://github.com/FDH2/UxPlay engine
           git -C engine checkout "$UXPLAY_REF"
 
+      - name: Aplicar mejoras de AirMe al motor
+        run: |
+          cp engine-mods/airme_window.c engine-mods/airme_window.h engine/renderers/
+          git -C engine apply --verbose ../engine-mods/airme.patch
+
       - name: Compilar motor
         run: |
           cmake -S engine -B engine/build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -46,7 +51,7 @@ jobs:
         shell: pwsh
         run: ./scripts/smoke-test.ps1 -Dist dist/AirMe
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: AirMe-windows-x64
           path: dist/AirMe
