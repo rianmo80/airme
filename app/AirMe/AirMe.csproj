@@ -11,7 +11,7 @@
     <AssemblyName>AirMe</AssemblyName>
     <ApplicationIcon>Assets\airme.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Product>AirMe</Product>
     <Description>Duplica la pantalla de tu iPhone en Windows por WiFi</Description>
     <Copyright>AirMe · motor UxPlay (GPL-3.0)</Copyright>
