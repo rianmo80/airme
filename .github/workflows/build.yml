@@ -1,0 +1,53 @@
+name: Compilar AirMe (Windows)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  # Commit fijo de UxPlay (>= 1.74: trae su propio mDNS, no necesita Bonjour SDK)
+  UXPLAY_REF: 48f5ce47c9ef694afccfac907c9e8828329657fe
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: git
+          pacboy: >-
+            cmake:p gcc:p ninja:p openssl:p libplist:p
+            gstreamer:p gst-plugins-base:p gst-plugins-good:p
+            gst-plugins-bad:p gst-libav:p
+
+      - name: Descargar UxPlay (commit fijo)
+        run: |
+          git clone https://github.com/FDH2/UxPlay engine
+          git -C engine checkout "$UXPLAY_REF"
+
+      - name: Compilar motor
+        run: |
+          cmake -S engine -B engine/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build engine/build
+
+      - name: Empaquetar
+        run: bash scripts/package.sh
+
+      - name: Prueba de arranque (fuera de MSYS2)
+        shell: pwsh
+        run: ./scripts/smoke-test.ps1 -Dist dist/AirMe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AirMe-windows-x64
+          path: dist/AirMe
+          retention-days: 30

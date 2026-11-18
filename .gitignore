@@ -1,0 +1,5 @@
+# Código de UxPlay clonado en la compilación
+engine/
+# Paquete generado
+dist/
+*.zip
